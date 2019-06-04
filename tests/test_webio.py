@@ -1,12 +1,14 @@
+from unittest import mock
+
 from controlpyweb.single_io import DiscreteIn, DiscreteOut
 from controlpyweb.webio_module import WebIOModule
 from assertpy import assert_that
+from unittest.mock import MagicMock
 import unittest
 import json
 
 
-
-incoming = """
+incoming = '''
     {
     "vin":"23.6",
     "register1":"0",
@@ -30,7 +32,7 @@ incoming = """
     "timezoneOffset":"-25200",
     "serialNumber":"00:0C:C8:04:24:B2"
     }  
-"""
+'''
 
 
 class Module(WebIOModule):
@@ -45,6 +47,16 @@ class Module(WebIOModule):
 
 
 module = Module("dummy url")
+
+
+def mocked_requests_get(*args, **kwargs):
+    class MockResponse:
+        def __init__(self):
+            pass
+        def json(self):
+            return json.loads(incoming)
+    return MockResponse()
+
 
 
 class TestWebIO(unittest.TestCase):
@@ -68,7 +80,16 @@ class TestWebIO(unittest.TestCase):
         module.Lamp1 = False
         assert_that(module.read("redLamp")).is_equal_to('0')
 
-    def test_that_dumps_captures_changes(self):
+    def test_that_changes_are_captured(self):
         module.Lamp1 = True
         module.Lamp2 = True
-        print(module.dumps())
+        assert_that(len(module.changes)).is_equal_to(2)
+
+    @mock.patch('requests.get', side_effect=mocked_requests_get)
+    def test_that_can_read_values_from_hardware(self, mock_get):
+        global incoming
+        incoming = incoming.replace(':"0"', ':"1"')
+        module.update_from_module()
+        assert_that(module.Button1).is_true()
+        assert_that(module.Button2).is_true()
+        assert_that(module.Button3).is_true()

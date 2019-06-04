@@ -6,8 +6,8 @@ class WebIOModule(ReaderWriter):
 
     def __init__(self, url: str):
         super().__init__(url)
-        members = [d for d in dir(self) if not d.startswith('__')]
-        for member in members:
+        all_members = [d for d in dir(self) if not d.startswith('__')]
+        for member in all_members:
             try:
                 attr = getattr(self, member)
                 attr._reader_writer = self
