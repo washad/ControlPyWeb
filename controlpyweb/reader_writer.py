@@ -19,11 +19,11 @@ class ReaderWriter(AbstractReaderWriter):
 
     def _check_for_address(self, addr: str):
         if not self.demand_address_exists:
-            return 
+            return
         if self._io is None:
             return
         if addr not in self._io:
-            raise ControlPyWebAddressNotFoundError
+            raise ControlPyWebAddressNotFoundError(addr)
 
     def _get(self):
         r = requests.get(self._url)

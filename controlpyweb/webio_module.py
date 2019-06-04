@@ -1,3 +1,4 @@
+from controlpyweb.errors import ControlPyWebAddressNotFoundError
 from controlpyweb.reader_writer import ReaderWriter
 import datetime
 
@@ -14,20 +15,26 @@ class WebIOModule(ReaderWriter):
             except AttributeError:
                 pass
 
+    def _read_safe(self, addr: str):
+        try:
+            return self.read(addr)
+        except ControlPyWebAddressNotFoundError:
+            return None
+
     @property
     def serial_number(self) -> str:
-        return self.read("serialNumber")
+        return self._read_safe("serialNumber")
 
     @property
     def vin(self) -> float:
-        response = self.read("vin")
+        response = self._read_safe("vin")
         if response is None:
             return -1
         return float(response)
 
     @property
     def time_of_read(self):
-        response = self.read("utcTime")
+        response = self._read_safe("utcTime")
         if response is None:
             return datetime.datetime.min
         return datetime.datetime.fromtimestamp(int(response))

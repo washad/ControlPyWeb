@@ -1,7 +1,7 @@
 from distutils.core import setup
 setup(
   name='ControlPyWeb',
-  packages=['ControlPyWeb'],
+  packages=['controlpyweb'],
   version='0.01',
   license='MIT',
   description='A project to facilitate easy read/write to the ControlByWeb line of Automation/SCADA IO products.',
@@ -16,7 +16,7 @@ setup(
       ],
   classifiers=[
     'Development Status :: 3 - Alpha',      # Chose either "3 - Alpha", "4 - Beta" or "5 - Production/Stable" as the current state of your package
-    'Intended Audience :: Automation Engineers',
+    'Intended Audience :: Developers',
     'Topic :: Software Development :: Build Tools',
     'License :: OSI Approved :: MIT License',
     'Programming Language :: Python :: 3',

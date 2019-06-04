@@ -7,4 +7,4 @@ class ControlPyWebReadOnlyError(Exception):
 
 class ControlPyWebAddressNotFoundError(Exception):
     def __init__(self, addr: str):
-        super().__init__(f"No IO was found with the address of '{addr}'!")
+        super().__init__(f"No IO was found with the address of {addr}!")
