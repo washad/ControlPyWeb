@@ -8,7 +8,7 @@ setup(
   author='Steve Jackson',
   author_email='washad@gmail.com',
   url='https://github.com/washad/ControlPyWeb',
-  download_url='https://github.com/washad/ControlPyWeb/archive/v_01.tar.gz',
+  download_url='https://github.com/washad/ControlPyWeb/archive/0.01.tar.gz',
   keywords=['Automation', 'ControlByWeb', 'SCADA'],
   install_requires=[
           'requests',
