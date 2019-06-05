@@ -1,9 +1,9 @@
 from unittest import mock
 
+from controlpyweb.errors import ControlPyWebAddressNotFoundError
 from controlpyweb.single_io import DiscreteIn, DiscreteOut
 from controlpyweb.webio_module import WebIOModule
 from assertpy import assert_that
-from unittest.mock import MagicMock
 import unittest
 import json
 
@@ -58,7 +58,6 @@ def mocked_requests_get(*args, **kwargs):
     return MockResponse()
 
 
-
 class TestWebIO(unittest.TestCase):
 
     def setUp(self):
@@ -93,3 +92,14 @@ class TestWebIO(unittest.TestCase):
         assert_that(module.Button1).is_true()
         assert_that(module.Button2).is_true()
         assert_that(module.Button3).is_true()
+
+    def test_that_trying_to_read_non_existing_register_gives_error(self):
+        j = json.dumps(dict(dummy=False))
+        module.loads(j)
+        try:
+            module.Button1 is True
+            assert_that(True).is_false()
+        except ControlPyWebAddressNotFoundError as ex:
+            print(ex)
+
+

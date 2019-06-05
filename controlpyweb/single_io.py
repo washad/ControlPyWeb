@@ -1,6 +1,6 @@
 from controlpyweb.abstract_reader_writer import AbstractReaderWriter
 import threading
-from controlpyweb.errors import ControlPyWebReadOnlyError
+from controlpyweb.errors import ControlPyWebReadOnlyError, ControlPyWebAddressNotFoundError
 from str2bool import str2bool
 
 lock = threading.Lock()
@@ -21,10 +21,9 @@ class SingleIO:
 
     def __get__(self, instance, owner):
         try:
-            self.read()
-        except:
-            pass
-        return self
+            return self.read()
+        except AttributeError:
+            return self
 
     def __set__(self, obj, value):
         raise ControlPyWebReadOnlyError
@@ -43,6 +42,7 @@ class SingleIO:
     def read(self):
         with lock:
             val = self._reader_writer.read(self.addr)
+            val = self._convert_type(val)
             self._value = val
             return val
 
