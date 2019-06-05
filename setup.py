@@ -2,13 +2,13 @@ from distutils.core import setup
 setup(
   name='ControlPyWeb',
   packages=['controlpyweb'],
-  version='0.01',
+  version='v0.0.1',
   license='MIT',
   description='A project to facilitate easy read/write to the ControlByWeb line of Automation/SCADA IO products.',
   author='Steve Jackson',
   author_email='washad@gmail.com',
   url='https://github.com/washad/ControlPyWeb',
-  download_url='https://github.com/washad/ControlPyWeb/archive/0.01.tar.gz',
+  download_url='https://github.com/washad/ControlPyWeb/archive/0.01.02.tar.gz',
   keywords=['Automation', 'ControlByWeb', 'SCADA'],
   install_requires=[
           'requests',
