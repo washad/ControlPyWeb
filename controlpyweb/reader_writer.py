@@ -82,7 +82,6 @@ class ReaderWriter(AbstractReaderWriter):
         """
         Stores the write value in memory to be written as part of a group write when changes are sent to
         hardware."""
-        self._check_for_address(addr)
         if isinstance(value, bool):
             value = '1' if value else '0'
         self._io[addr] = value
@@ -92,6 +91,5 @@ class ReaderWriter(AbstractReaderWriter):
         """
         Instead of waiting for a group write, writes the given value immediately. Note, this is not very efficient
         and should be used sparingly. """
-        self._check_for_address(addr)
         requests.get(self._url, params={addr, value})
 
