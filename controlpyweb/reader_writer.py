@@ -12,7 +12,9 @@ class ReaderWriter(AbstractReaderWriter):
         """
         :param url: The address of the IO Base module from/to which IO is written
         """
-        self._url = f'https://{url}/customState.json'    # type: str
+        url = f'http://{url}' if 'http' not in url else url
+        url = f'{url}/customState.json'
+        self._url = url    # type: str
         self._io = dict()
         self._changes = dict()
         self.demand_address_exists = demand_address_exists
