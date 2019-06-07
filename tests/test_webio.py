@@ -42,9 +42,6 @@ class Module(WebIOModule):
     Lamp1 = DiscreteOut("Lamp1", "redLamp")
     Lamp2 = DiscreteOut("Lamp2", "amberLamp")
 
-    def __init__(self, url: str):
-        super().__init__(url)
-
 
 module = Module("dummy url")
 

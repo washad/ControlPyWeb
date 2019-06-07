@@ -9,11 +9,14 @@ class WebIOModule(ReaderWriter):
         super().__init__(url)
         all_members = [d for d in dir(self) if not d.startswith('__')]
         for member in all_members:
+            temp = self.demand_address_exists
+            self.demand_address_exists = False
             try:
                 attr = getattr(self, member)
                 attr._reader_writer = self
             except AttributeError:
                 pass
+            self.demand_address_exists = temp
 
     def _read_safe(self, addr: str):
         try:

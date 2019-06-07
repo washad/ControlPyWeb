@@ -14,16 +14,18 @@ class SingleIO:
         self._value = default
 
     def __eq__(self, other):
+        if isinstance(other, SingleIO):
+            other = other.value
         return self.value == other
 
     def __ne__(self, other):
+        if isinstance(other, SingleIO):
+            other = other.value
         return self.value != other
 
     def __get__(self, instance, owner):
-        try:
-            return self.read()
-        except AttributeError:
-            return self
+        self.read()
+        return self
 
     def __set__(self, obj, value):
         raise ControlPyWebReadOnlyError
@@ -41,6 +43,8 @@ class SingleIO:
 
     def read(self):
         with lock:
+            if self._reader_writer is None:
+                return None
             val = self._reader_writer.read(self.addr)
             val = self._convert_type(val)
             self._value = val
@@ -97,15 +101,23 @@ class AnalogIn(SingleIO):
         return float(value)
 
     def __gt__(self, other):
+        if isinstance(other, SingleIO):
+            other = other.value
         return self.value > other
 
     def __lt__(self, other):
+        if isinstance(other, SingleIO):
+            other = other.value
         return self.value < other
 
     def __ge__(self, other):
+        if isinstance(other, SingleIO):
+            other = other.value
         return self.value >= other
 
     def __le__(self, other):
+        if isinstance(other, SingleIO):
+            other = other.value
         return self.value <= other
 
 
