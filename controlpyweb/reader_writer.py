@@ -36,6 +36,12 @@ class ReaderWriter(AbstractReaderWriter):
         r = None if r is None else r.json()
         return r
 
+    @staticmethod
+    def _value_to_str(value):
+        if isinstance(value, bool):
+            value = '1' if value else '0'
+        return str(value)
+
     @property
     def changes(self):
         """Returns a dictionary of all changes made since the last read or write"""
@@ -76,8 +82,8 @@ class ReaderWriter(AbstractReaderWriter):
     def send_changes_to_module(self):
         """ Takes the collection of changes made using the write command and
         sends them all to the hardware collectively. """
-        if self._changes is None:
-            return self.update_from_module()
+        if self._changes is None or len(self._changes) == 0:
+            return
         requests.get(self._url, params=self._changes)
 
     def update_from_module(self):
@@ -91,14 +97,15 @@ class ReaderWriter(AbstractReaderWriter):
         """
         Stores the write value in memory to be written as part of a group write when changes are sent to
         hardware."""
-        if isinstance(value, bool):
-            value = '1' if value else '0'
+        to_str = self._value_to_str(value)
         self._io[addr] = value
-        self._changes[addr] = value
+        self._changes[addr] = to_str
 
     def write_immediate(self, addr: str, value: object):
         """
         Instead of waiting for a group write, writes the given value immediately. Note, this is not very efficient
         and should be used sparingly. """
-        requests.get(self._url, params={addr, value})
+        to_str = self._value_to_str(value)
+        self._io[addr] = value
+        requests.get(self._url, params={addr: to_str})
 
