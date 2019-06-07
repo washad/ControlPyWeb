@@ -31,7 +31,7 @@ class SingleIO:
         raise ControlPyWebReadOnlyError
 
     def __str__(self):
-        return f'{type(self).__name__}: {self.name} = {self.value}'
+        return f'[{type(self).__name__}] {self.name} = {self.value}'
 
     @property
     def value(self):

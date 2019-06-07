@@ -17,10 +17,13 @@ class ReaderWriter(AbstractReaderWriter):
         self._url = url    # type: str
         self._io = dict()
         self._changes = dict()
+        self._first_read = False
         self.demand_address_exists = demand_address_exists
 
     def _check_for_address(self, addr: str):
         if not self.demand_address_exists:
+            return
+        if not self._first_read:
             return
         if self._io is None:
             return
@@ -28,6 +31,7 @@ class ReaderWriter(AbstractReaderWriter):
             raise ControlPyWebAddressNotFoundError(addr)
 
     def _get(self):
+        self._first_read = True
         r = requests.get(self._url)
         r = None if r is None else r.json()
         return r
@@ -49,10 +53,13 @@ class ReaderWriter(AbstractReaderWriter):
 
     def loads(self, json_str: str):
         """Replaces the current IO key/values with that from the json string"""
+        self._first_read = True
         self._io = json.loads(json_str)
 
     def read(self, addr: str) -> Optional[Union[bool, int, float, str]]:
         """Returns the value of a single IO from the memory store"""
+        if not self._first_read:
+            return None
         self._check_for_address(addr)
         val = self._io.get(addr)
         return val
