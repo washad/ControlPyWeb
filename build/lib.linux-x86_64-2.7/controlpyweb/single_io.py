@@ -11,7 +11,7 @@ class SingleIO:
         self.name = name
         self.addr = addr
         self._reader_writer = reader
-        self._value = default
+        self._default = default
 
     def __and__(self, other):
         if isinstance(other, SingleIO):
@@ -40,7 +40,10 @@ class SingleIO:
 
     @property
     def value(self):
-        return self._convert_type(self._value)
+        val = self.read()
+        if val is None:
+            return self._default
+        return self._convert_type(val)
 
     @staticmethod
     def _convert_type(value):
@@ -52,7 +55,6 @@ class SingleIO:
                 return None
             val = self._reader_writer.read(self.addr)
             val = self._convert_type(val)
-            self._value = val
             return val
 
     def read_immediate(self):
@@ -76,7 +78,6 @@ class DiscreteIn(SingleIO):
         return bool(self.value)
 
 
-
 class IOOut(DiscreteIn):
     def __init__(self, name: str, addr: str, default, writer: AbstractReaderWriter,
                  ignore_duplicate_writes: bool = True):
@@ -84,6 +85,8 @@ class IOOut(DiscreteIn):
         self.ignore_duplicate_writes = ignore_duplicate_writes
 
     def __set__(self, instance, value):
+        if isinstance(value, SingleIO):
+            value = value.value
         self.write(value)
 
     def write(self, value):

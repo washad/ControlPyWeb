@@ -77,8 +77,8 @@ class TestWebIO(unittest.TestCase):
         assert_that(module.read("redLamp")).is_false()
 
     def test_that_changes_are_captured(self):
-        module.Lamp1 = True
-        module.Lamp2 = True
+        module.Lamp1 = not module.Lamp1
+        module.Lamp2 = not module.Lamp2
         assert_that(len(module.changes)).is_equal_to(2)
 
     @mock.patch('requests.get', side_effect=mocked_requests_get)
@@ -89,6 +89,12 @@ class TestWebIO(unittest.TestCase):
         assert_that(module.Button1).is_true()
         assert_that(module.Button2).is_true()
         assert_that(module.Button3).is_true()
+
+        incoming = incoming.replace(':"1"', ':"0"')
+        module.update_from_module()
+        assert_that(module.Button1).is_false()
+        assert_that(module.Button2).is_false()
+        assert_that(module.Button3).is_false()
 
     def test_that_trying_to_read_non_existing_register_gives_error(self):
         j = json.dumps(dict(dummy=False))
@@ -121,5 +127,13 @@ class TestWebIO(unittest.TestCase):
 
         assert_that(True and module.Lamp1).is_true()
         assert_that(False and module.Lamp1).is_false()
+
+    def test_setting_one_equal_to_another(self):
+        module.Lamp1 = True
+        module.Lamp2 = False
+        assert_that(module.Lamp1).is_not_equal_to(module.Lamp2)
+        module.Lamp2 = Module.Lamp1
+        assert_that(module.Lamp1).is_equal_to(module.Lamp2)
+
 
 
