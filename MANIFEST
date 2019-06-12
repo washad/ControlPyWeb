@@ -4,7 +4,6 @@ setup.py
 controlpyweb/__init__.py
 controlpyweb/abstract_reader_writer.py
 controlpyweb/errors.py
-controlpyweb/external_io.py
 controlpyweb/reader_writer.py
 controlpyweb/single_io.py
 controlpyweb/webio_module.py

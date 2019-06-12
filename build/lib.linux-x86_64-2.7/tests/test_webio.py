@@ -72,9 +72,9 @@ class TestWebIO(unittest.TestCase):
 
     def test_can_write_values(self):
         module.Lamp1 = True
-        assert_that(module.read("redLamp")).is_true()
+        assert_that(module.read("redLamp")).is_equal_to("1")
         module.Lamp1 = False
-        assert_that(module.read("redLamp")).is_false()
+        assert_that(module.read("redLamp")).is_equal_to('0')
 
     def test_that_changes_are_captured(self):
         module.Lamp1 = True
@@ -98,14 +98,5 @@ class TestWebIO(unittest.TestCase):
             assert_that(True).is_false()
         except ControlPyWebAddressNotFoundError as ex:
             print(ex)
-
-    def test_that_writing_duplicate_has_no_affect(self):
-        module.Lamp1 = not Module.Lamp1
-        changes = module.dumps(changes_only=True)
-        assert_that(changes).is_not_empty()
-        module.flush_changes()
-        module.Lamp1 = module.Lamp1
-        changes = module.dumps(changes_only=True)
-        assert_that(changes).is_empty()
 
 

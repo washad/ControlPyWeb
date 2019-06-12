@@ -72,17 +72,13 @@ class DiscreteIn(SingleIO):
 
 
 class IOOut(DiscreteIn):
-    def __init__(self, name: str, addr: str, default, writer: AbstractReaderWriter,
-                 ignore_duplicate_writes: bool = True):
+    def __init__(self, name: str, addr: str, default, writer: AbstractReaderWriter):
         super().__init__(name, addr, default, writer)
-        self.ignore_duplicate_writes = ignore_duplicate_writes
 
     def __set__(self, instance, value):
         self.write(value)
 
     def write(self, value):
-        if self.ignore_duplicate_writes and value == self.value:
-            return
         self._reader_writer.write(self.addr, self._convert_type(value))
         self._value = value
 
