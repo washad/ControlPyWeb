@@ -87,6 +87,7 @@ class ReaderWriter(AbstractReaderWriter):
         if self._changes is None or len(self._changes) == 0:
             return
         requests.get(self._url, params=self._changes)
+        self.flush_changes()
 
     def update_from_module(self):
         """Makes a hardware call to the base module to retrieve the value of all IOs, storing their
@@ -94,6 +95,7 @@ class ReaderWriter(AbstractReaderWriter):
         vals = self._get()
         if vals is not None:
             self._io = vals
+        self.flush_changes()
 
     def write(self, addr: str, value: object) -> None:
         """

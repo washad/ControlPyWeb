@@ -108,4 +108,18 @@ class TestWebIO(unittest.TestCase):
         changes = module.dumps(changes_only=True)
         assert_that(changes).is_empty()
 
+    def test_and_operator(self):
+        module.Lamp1 = True
+        module.Lamp2 = True
+        assert_that(module.Lamp1 and module.Lamp2).is_true()
+
+        module.Lamp2 = False
+        assert_that(module.Lamp1 and module.Lamp2).is_false()
+
+        assert_that(module.Lamp1 and True).is_true()
+        assert_that(module.Lamp1 and False).is_false()
+
+        assert_that(True and module.Lamp1).is_true()
+        assert_that(False and module.Lamp1).is_false()
+
 

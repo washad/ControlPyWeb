@@ -13,6 +13,11 @@ class SingleIO:
         self._reader_writer = reader
         self._value = default
 
+    def __and__(self, other):
+        if isinstance(other, SingleIO):
+            return self.value and other.value
+        return self.value and other
+
     def __eq__(self, other):
         if isinstance(other, SingleIO):
             other = other.value
@@ -68,7 +73,8 @@ class DiscreteIn(SingleIO):
         return bool(value)
 
     def __bool__(self):
-        return self.value
+        return bool(self.value)
+
 
 
 class IOOut(DiscreteIn):
