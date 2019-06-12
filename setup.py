@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="controlpyweb",
-    version="0.0.8",
+    version="0.0.9",
     author="Steve Jackson",
     author_email="washad@gmail.com",
     description="A project to facilitate easy read/write to the ControlByWeb line of Automation/SCADA IO products.",
