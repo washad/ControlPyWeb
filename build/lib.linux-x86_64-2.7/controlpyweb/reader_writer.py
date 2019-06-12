@@ -50,6 +50,8 @@ class ReaderWriter(AbstractReaderWriter):
     def dumps(self, changes_only: bool = False):
         """Returns the current IO key/values as json string"""
         if changes_only:
+            if len(self._changes) == 0:
+                return ''
             return json.dumps(self._changes)
         return json.dumps(self._io)
 
