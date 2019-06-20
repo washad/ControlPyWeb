@@ -2,6 +2,8 @@ from controlpyweb.errors import ControlPyWebAddressNotFoundError
 from controlpyweb.reader_writer import ReaderWriter
 import datetime
 
+from controlpyweb.single_io import SingleIO
+
 
 class WebIOModule(ReaderWriter):
 
@@ -12,6 +14,8 @@ class WebIOModule(ReaderWriter):
         for member in all_members:
             try:
                 attr = getattr(self, member)
+                if not isinstance(attr, SingleIO):
+                    continue
                 attr._reader_writer = self
                 self.members.append(member)
             except AttributeError:

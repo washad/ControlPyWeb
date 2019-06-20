@@ -38,6 +38,7 @@ incoming = '''
 
 
 class Module(WebIOModule):
+    member_len = 7
     Button1 = DiscreteIn("Button1", "device1DigitalInput1", units="On/Off")
     Button2 = DiscreteIn("Button2", "device1DigitalInput2", units="Start/Stop")
     Button3 = DiscreteIn("Button3", "device1DigitalInput3")
@@ -141,7 +142,7 @@ class TestWebIO(unittest.TestCase):
         module.Lamp2 = Module.Lamp1
         assert_that(module.Lamp1).is_equal_to(module.Lamp2)
 
-    def test_arithmatic_operations(self):
+    def test_arithmetic_operations(self):
         module.Temp1 = 10.0
         module.Temp2 = 20.0
 
@@ -153,6 +154,9 @@ class TestWebIO(unittest.TestCase):
     def test_should_be_able_to_read_units(self):
         assert_that(module.Button1.units).is_equal_to("On/Off")
         assert_that(module.Temp1.units).is_equal_to("DegF")
+
+    def test_can_get_members_list(self):
+        assert_that(len(module.members)).is_equal_to(module.member_len)
 
 
 
