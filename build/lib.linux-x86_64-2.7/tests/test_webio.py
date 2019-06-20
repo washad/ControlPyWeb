@@ -1,7 +1,7 @@
 from unittest import mock
 
 from controlpyweb.errors import ControlPyWebAddressNotFoundError
-from controlpyweb.single_io import DiscreteIn, DiscreteOut
+from controlpyweb.single_io import DiscreteIn, DiscreteOut, AnalogOut
 from controlpyweb.webio_module import WebIOModule
 from assertpy import assert_that
 import unittest
@@ -30,17 +30,21 @@ incoming = '''
     "device2Relay8":"0",
     "utcTime":"1559533814",
     "timezoneOffset":"-25200",
-    "serialNumber":"00:0C:C8:04:24:B2"
-    }  
+    "serialNumber":"00:0C:C8:04:24:B2",
+    "temperature1":"87",
+    "temperature2":"75"
+    } 
 '''
 
 
 class Module(WebIOModule):
-    Button1 = DiscreteIn("Button1", "device1DigitalInput1")
-    Button2 = DiscreteIn("Button2", "device1DigitalInput2")
+    Button1 = DiscreteIn("Button1", "device1DigitalInput1", units="On/Off")
+    Button2 = DiscreteIn("Button2", "device1DigitalInput2", units="Start/Stop")
     Button3 = DiscreteIn("Button3", "device1DigitalInput3")
     Lamp1 = DiscreteOut("Lamp1", "redLamp")
     Lamp2 = DiscreteOut("Lamp2", "amberLamp")
+    Temp1 = AnalogOut("Temp1", "temperature1", units="DegF")
+    Temp2 = AnalogOut("Temp2", "temperature2")
 
 
 module = Module("dummy url")
@@ -79,7 +83,9 @@ class TestWebIO(unittest.TestCase):
     def test_that_changes_are_captured(self):
         module.Lamp1 = not module.Lamp1
         module.Lamp2 = not module.Lamp2
-        assert_that(len(module.changes)).is_equal_to(2)
+        keys = module.changes
+        assert_that(keys).contains('redLamp')
+        assert_that(keys).contains('amberLamp')
 
     @mock.patch('requests.get', side_effect=mocked_requests_get)
     def test_that_can_read_values_from_hardware(self, mock_get):
@@ -134,6 +140,19 @@ class TestWebIO(unittest.TestCase):
         assert_that(module.Lamp1).is_not_equal_to(module.Lamp2)
         module.Lamp2 = Module.Lamp1
         assert_that(module.Lamp1).is_equal_to(module.Lamp2)
+
+    def test_arithmatic_operations(self):
+        module.Temp1 = 10.0
+        module.Temp2 = 20.0
+
+        assert_that(module.Temp1 + module.Temp2).is_equal_to(30)
+        assert_that(module.Temp1 * module.Temp2).is_equal_to(200)
+        assert_that(module.Temp2 / module.Temp1).is_equal_to(2)
+        assert_that(module.Temp2 - module.Temp1).is_equal_to(10)
+
+    def test_should_be_able_to_read_units(self):
+        assert_that(module.Button1.units).is_equal_to("On/Off")
+        assert_that(module.Temp1.units).is_equal_to("DegF")
 
 
 

@@ -38,12 +38,12 @@ incoming = '''
 
 
 class Module(WebIOModule):
-    Button1 = DiscreteIn("Button1", "device1DigitalInput1")
-    Button2 = DiscreteIn("Button2", "device1DigitalInput2")
+    Button1 = DiscreteIn("Button1", "device1DigitalInput1", units="On/Off")
+    Button2 = DiscreteIn("Button2", "device1DigitalInput2", units="Start/Stop")
     Button3 = DiscreteIn("Button3", "device1DigitalInput3")
     Lamp1 = DiscreteOut("Lamp1", "redLamp")
     Lamp2 = DiscreteOut("Lamp2", "amberLamp")
-    Temp1 = AnalogOut("Temp1", "temperature1")
+    Temp1 = AnalogOut("Temp1", "temperature1", units="DegF")
     Temp2 = AnalogOut("Temp2", "temperature2")
 
 
@@ -149,6 +149,10 @@ class TestWebIO(unittest.TestCase):
         assert_that(module.Temp1 * module.Temp2).is_equal_to(200)
         assert_that(module.Temp2 / module.Temp1).is_equal_to(2)
         assert_that(module.Temp2 - module.Temp1).is_equal_to(10)
+
+    def test_should_be_able_to_read_units(self):
+        assert_that(module.Button1.units).is_equal_to("On/Off")
+        assert_that(module.Temp1.units).is_equal_to("DegF")
 
 
 
