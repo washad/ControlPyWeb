@@ -158,5 +158,9 @@ class TestWebIO(unittest.TestCase):
     def test_can_get_members_list(self):
         assert_that(len(module.members)).is_equal_to(module.member_len)
 
+    def test_module_creates_correct_json(self):
+        j = module.dumps()
+        print(j)
+
 
 
