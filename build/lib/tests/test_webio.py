@@ -169,3 +169,19 @@ class TestWebIO(unittest.TestCase):
             module.update_from_module(timeout=0.00001)
         except WebIOConnectionError as ex:
             pass
+
+    def test_that_non_matching_address_gives_error(self):
+        try:
+            Module.Button1 = DiscreteIn("Button1", "changed", units="On/Off")
+            module = Module("testme")
+            module.loads(incoming)
+            print(module.Button1.read())
+            assert_that(True).is_false()
+        except ControlPyWebAddressNotFoundError:
+            pass
+
+    def test_that_can_disable_force_address_match(self):
+        Module.Button1 = DiscreteIn("Button1", "changed", units="On/Off")
+        module = Module("testme", demand_address_exists=False)
+        module.loads(incoming)
+        print(module.Button1.read())
