@@ -1,11 +1,13 @@
 from unittest import mock
 
-from controlpyweb.errors import ControlPyWebAddressNotFoundError
+from controlpyweb.errors import ControlPyWebAddressNotFoundError, WebIOConnectionError
 from controlpyweb.single_io import DiscreteIn, DiscreteOut, AnalogOut
 from controlpyweb.webio_module import WebIOModule
 from assertpy import assert_that
 import unittest
 import json
+from urllib3.exceptions import MaxRetryError, NewConnectionError
+from requests.exceptions import ConnectionError
 
 
 incoming = '''
@@ -48,7 +50,7 @@ class Module(WebIOModule):
     Temp2 = AnalogOut("Temp2", "temperature2")
 
 
-module = Module("dummy url")
+module = Module("testme")
 
 
 def mocked_requests_get(*args, **kwargs):
@@ -162,5 +164,8 @@ class TestWebIO(unittest.TestCase):
         j = module.dumps()
         print(j)
 
-
-
+    def test_connection_error(self):
+        try:
+            module.update_from_module(timeout=0.00001)
+        except WebIOConnectionError as ex:
+            pass

@@ -7,8 +7,8 @@ from controlpyweb.single_io import SingleIO
 
 class WebIOModule(ReaderWriter):
 
-    def __init__(self, url: str):
-        super().__init__(url)
+    def __init__(self, url: str, demand_address_exists: bool = True):
+        super().__init__(url, demand_address_exists)
         self.members = []
         all_members = [d for d in dir(self) if not d.startswith('__')]
         for member in all_members:

@@ -2,16 +2,22 @@ from controlpyweb.errors import ControlPyWebAddressNotFoundError
 from controlpyweb.reader_writer import ReaderWriter
 import datetime
 
+from controlpyweb.single_io import SingleIO
+
 
 class WebIOModule(ReaderWriter):
 
-    def __init__(self, url: str):
-        super().__init__(url)
+    def __init__(self, url: str, demand_address_exists: bool = True):
+        super().__init__(url, demand_address_exists)
+        self.members = []
         all_members = [d for d in dir(self) if not d.startswith('__')]
         for member in all_members:
             try:
                 attr = getattr(self, member)
+                if not isinstance(attr, SingleIO):
+                    continue
                 attr._reader_writer = self
+                self.members.append(member)
             except AttributeError:
                 pass
 
