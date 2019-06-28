@@ -1,11 +1,13 @@
 from unittest import mock
 
-from controlpyweb.errors import ControlPyWebAddressNotFoundError
+from controlpyweb.errors import ControlPyWebAddressNotFoundError, WebIOConnectionError
 from controlpyweb.single_io import DiscreteIn, DiscreteOut, AnalogOut
 from controlpyweb.webio_module import WebIOModule
 from assertpy import assert_that
 import unittest
 import json
+from urllib3.exceptions import MaxRetryError, NewConnectionError
+from requests.exceptions import ConnectionError
 
 
 incoming = '''
@@ -48,7 +50,7 @@ class Module(WebIOModule):
     Temp2 = AnalogOut("Temp2", "temperature2")
 
 
-module = Module("dummy url")
+module = Module("testme")
 
 
 def mocked_requests_get(*args, **kwargs):
@@ -158,5 +160,28 @@ class TestWebIO(unittest.TestCase):
     def test_can_get_members_list(self):
         assert_that(len(module.members)).is_equal_to(module.member_len)
 
+    def test_module_creates_correct_json(self):
+        j = module.dumps()
+        print(j)
 
+    def test_connection_error(self):
+        try:
+            module.update_from_module(timeout=0.00001)
+        except WebIOConnectionError as ex:
+            pass
 
+    def test_that_non_matching_address_gives_error(self):
+        try:
+            Module.Button1 = DiscreteIn("Button1", "changed", units="On/Off")
+            module = Module("testme")
+            module.loads(incoming)
+            print(module.Button1.read())
+            assert_that(True).is_false()
+        except ControlPyWebAddressNotFoundError:
+            pass
+
+    def test_that_can_disable_force_address_match(self):
+        Module.Button1 = DiscreteIn("Button1", "changed", units="On/Off")
+        module = Module("testme", demand_address_exists=False)
+        module.loads(incoming)
+        print(module.Button1.read())

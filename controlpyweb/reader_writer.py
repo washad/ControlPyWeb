@@ -8,7 +8,7 @@ from controlpyweb.errors import ControlPyWebAddressNotFoundError, WebIOConnectio
 
 class ReaderWriter(AbstractReaderWriter):
 
-    def __init__(self, url: str, demand_address_exists: bool = True):
+    def __init__(self, url: str, demand_address_exists: bool = True, timeout: float=10.0):
         """
         :param url: The address of the IO Base module from/to which IO is written
         """
@@ -19,6 +19,7 @@ class ReaderWriter(AbstractReaderWriter):
         self._changes = dict()
         self._first_read = False
         self.demand_address_exists = demand_address_exists
+        self.timeout = timeout
 
     def _check_for_address(self, addr: str):
         if not self.demand_address_exists:
@@ -30,7 +31,9 @@ class ReaderWriter(AbstractReaderWriter):
         if addr not in self._io:
             raise ControlPyWebAddressNotFoundError(addr)
 
-    def _get(self, timeout: float):
+    def _get(self, timeout: float = None) -> str:
+        """ Does an http get and returns the json string results"""
+        timeout = self.timeout if timeout is None else timeout
         self._first_read = True
         r = requests.get(self._url, timeout=timeout)
         r = None if r is None else r.json()
@@ -72,11 +75,12 @@ class ReaderWriter(AbstractReaderWriter):
         val = self._io.get(addr)
         return val
 
-    def read_immediate(self, addr: str, timeout: float = 0.5) -> object:
+    def read_immediate(self, addr: str, timeout: None) -> object:
         """Makes a hardware call to the base module to retrieve the value of the IO. This is inefficient and should
         be used sparingly."""
         try:
             self._check_for_address(addr)
+            timeout = self.timeout if timeout is None else timeout
             vals = self._get(timeout=timeout)
             if vals is None:
                 return None
@@ -84,21 +88,23 @@ class ReaderWriter(AbstractReaderWriter):
         except (requests.exceptions.ConnectionError, requests.exceptions.ConnectTimeout) as ex:
             raise WebIOConnectionError(ex)
 
-    def send_changes_to_module(self, timeout: float=1.0):
+    def send_changes_to_module(self, timeout: float=None):
         """ Takes the collection of changes made using the write command and
         sends them all to the hardware collectively. """
         try:
             if self._changes is None or len(self._changes) == 0:
                 return
+            timeout = self.timeout if timeout is None else timeout
             requests.get(self._url, params=self._changes, timeout=timeout)
             self.flush_changes()
         except (requests.exceptions.ConnectionError, requests.exceptions.ConnectTimeout) as ex:
             raise WebIOConnectionError(ex)
 
-    def update_from_module(self, timeout: float = 1):
+    def update_from_module(self, timeout: float = None):
         """Makes a hardware call to the base module to retrieve the value of all IOs, storing their
         results in memory."""
         try:
+            timeout = self.timeout if timeout is None else timeout
             vals = self._get(timeout)
             if vals is not None:
                 self._io = vals
@@ -114,11 +120,12 @@ class ReaderWriter(AbstractReaderWriter):
         self._io[addr] = value
         self._changes[addr] = to_str
 
-    def write_immediate(self, addr: str, value: object, timeout: float = 1.0):
+    def write_immediate(self, addr: str, value: object, timeout: float = None):
         """
         Instead of waiting for a group write, writes the given value immediately. Note, this is not very efficient
         and should be used sparingly. """
         try:
+            timeout = self.timeout if timeout is None else timeout
             to_str = self._value_to_str(value)
             self._io[addr] = value
             requests.get(self._url, params={addr: to_str}, timeout=timeout)
