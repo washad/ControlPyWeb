@@ -1,14 +1,12 @@
 from unittest import mock
 
 from controlpyweb.errors import ControlPyWebAddressNotFoundError, WebIOConnectionError
-from controlpyweb.single_io import DiscreteIn, DiscreteOut, AnalogOut
+from controlpyweb.io.discrete_io import DiscreteIn, DiscreteOut
+from controlpyweb.io.analog_io import AnalogOut
 from controlpyweb.webio_module import WebIOModule
 from assertpy import assert_that
 import unittest
 import json
-from urllib3.exceptions import MaxRetryError, NewConnectionError
-from requests.exceptions import ConnectionError
-
 
 incoming = '''
     {
@@ -94,6 +92,7 @@ class TestWebIO(unittest.TestCase):
     def test_that_can_read_values_from_hardware(self, mock_get):
         global incoming
         incoming = incoming.replace(':"0"', ':"1"')
+        module.Button1.addr = "device1DigitalInput1"
         module.update_from_module()
         assert_that(module.Button1).is_true()
         assert_that(module.Button2).is_true()
@@ -108,14 +107,15 @@ class TestWebIO(unittest.TestCase):
     def test_that_trying_to_read_non_existing_register_gives_error(self):
         j = json.dumps(dict(dummy=False))
         module.loads(j)
+        module.demand_address_exists = True
         try:
             module.Button1 is True
             assert_that(True).is_false()
         except ControlPyWebAddressNotFoundError as ex:
-            print(ex)
+            pass
 
     def test_that_writing_duplicate_has_no_affect(self):
-        module.Lamp1 = not Module.Lamp1
+        module.Lamp1 = not module.Lamp1
         changes = module.dumps(changes_only=True)
         assert_that(changes).is_not_empty()
         module.flush_changes()
@@ -141,7 +141,7 @@ class TestWebIO(unittest.TestCase):
         module.Lamp1 = True
         module.Lamp2 = False
         assert_that(module.Lamp1).is_not_equal_to(module.Lamp2)
-        module.Lamp2 = Module.Lamp1
+        module.Lamp2 = module.Lamp1
         assert_that(module.Lamp1).is_equal_to(module.Lamp2)
 
     def test_arithmetic_operations(self):
@@ -164,16 +164,11 @@ class TestWebIO(unittest.TestCase):
         j = module.dumps()
         print(j)
 
-    def test_connection_error(self):
-        try:
-            module.update_from_module(timeout=0.00001)
-        except WebIOConnectionError as ex:
-            pass
 
     def test_that_non_matching_address_gives_error(self):
         try:
-            Module.Button1 = DiscreteIn("Button1", "changed", units="On/Off")
-            module = Module("testme")
+            module.demand_address_exists = True
+            module.Button1.addr = "changed"
             module.loads(incoming)
             print(module.Button1.read())
             assert_that(True).is_false()
@@ -181,7 +176,7 @@ class TestWebIO(unittest.TestCase):
             pass
 
     def test_that_can_disable_force_address_match(self):
-        Module.Button1 = DiscreteIn("Button1", "changed", units="On/Off")
-        module = Module("testme", demand_address_exists=False)
+        module.Button1.addr = "changed"
+        module.demand_address_exists = False
         module.loads(incoming)
         print(module.Button1.read())

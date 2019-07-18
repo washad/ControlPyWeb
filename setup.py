@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="controlpyweb",
-    version="0.0.18",
+    version="0.0.19",
     author="Steve Jackson",
     author_email="washad@gmail.com",
     description="A project to facilitate easy read/write to the ControlByWeb line of Automation/SCADA IO products.",
@@ -13,6 +13,7 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url="https://github.com/washad/ControlPyWeb",
     packages=setuptools.find_packages(),
+    install_requires=['wheel', 'requests', 'str2bool'],
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",

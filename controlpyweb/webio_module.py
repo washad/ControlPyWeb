@@ -2,7 +2,7 @@ from controlpyweb.errors import ControlPyWebAddressNotFoundError
 from controlpyweb.reader_writer import ReaderWriter
 import datetime
 
-from controlpyweb.single_io import SingleIO
+from controlpyweb.io.single_io import SingleIO
 
 
 class WebIOModule(ReaderWriter):
@@ -26,6 +26,7 @@ class WebIOModule(ReaderWriter):
             return self.read(addr)
         except ControlPyWebAddressNotFoundError:
             return None
+
 
     @property
     def serial_number(self) -> str:

@@ -1,6 +1,6 @@
 import unittest
 from unittest.mock import MagicMock
-from controlpyweb.single_io import SingleIO, DiscreteIn
+from controlpyweb.io.discrete_io import SingleIO, DiscreteIn
 from assertpy import assert_that
 
 

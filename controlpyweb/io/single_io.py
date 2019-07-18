@@ -7,11 +7,12 @@ lock = threading.Lock()
 
 
 class SingleIO:
-    def __init__(self, name: str, addr: str, default: object,
+    def __init__(self, name: str, addr: str, default: object, namespace: str = None,
                  reader: AbstractReaderWriter = None, *args, **kwargs):
         self.units = kwargs.get("units") if kwargs is not None else ""
         self.name = name
         self.addr = addr
+        self.namespace = namespace
         self._reader_writer = reader
         self._default = default
 
@@ -110,65 +111,10 @@ class SingleIO:
             return val
 
 
-class DiscreteIn(SingleIO):
-    def __init__(self, name: str, addr: str, default: bool = False,
-                 reader: AbstractReaderWriter = None, *args, **kwargs):
-        super().__init__(name, addr, default, reader, *args, **kwargs)
-
-    @staticmethod
-    def _convert_type(value):
-        if isinstance(value, str):
-            return str2bool(value)
-        return bool(value)
-
-    def __bool__(self):
-        return bool(self.value)
 
 
-class IOOut(DiscreteIn):
-    def __init__(self, name: str, addr: str, default,
-                 reader: AbstractReaderWriter = None, *args, **kwargs):
-        super().__init__(name, addr, default, reader, *args, **kwargs)
-        self.ignore_duplicate_writes = kwargs.get('ignore_duplicate_writes', True) if kwargs is not None else True
-
-    def __set__(self, instance, value):
-        if isinstance(value, SingleIO):
-            value = value.value
-        self.write(value)
-
-    def write(self, value):
-        if self.ignore_duplicate_writes and value == self.value:
-            return
-        self._reader_writer.write(self.addr, self._convert_type(value))
-
-    def write_immediate(self, value):
-        self._reader_writer.write_immediate(self.addr, self._convert_type(value))
 
 
-class DiscreteOut(IOOut, DiscreteIn):
-    def __init__(self, name: str, addr: str, default: bool = False,
-                 reader: AbstractReaderWriter = None, *args, **kwargs):
-        super().__init__(name, addr, default, reader, *args, **kwargs)
-
-
-class AnalogIn(SingleIO):
-    def __init__(self, name: str, addr: str, default: float = 0.0,
-                 reader: AbstractReaderWriter = None, *args, **kwargs):
-        super().__init__(name, addr, default, reader, *args, **kwargs)
-
-    @staticmethod
-    def _convert_type(value):
-        return float(value)
-
-
-class AnalogOut(IOOut, AnalogIn):
-    def __init__(self, name: str, addr: str, default: float = 0.0,
-                 reader: AbstractReaderWriter = None, *args, **kwargs):
-        super().__init__(name, addr, default, reader, *args, **kwargs)
-
-    @staticmethod
-    def _convert_type(value):
-        return float(value)
 
 
 
