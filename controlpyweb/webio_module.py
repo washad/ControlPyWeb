@@ -2,7 +2,7 @@ from controlpyweb.errors import ControlPyWebAddressNotFoundError
 from controlpyweb.reader_writer import ReaderWriter
 import datetime
 
-from controlpyweb.io.single_io import SingleIO
+from controlpyweb.io_definitions.single_io import SingleIO
 
 
 class WebIOModule(ReaderWriter):
@@ -47,5 +47,7 @@ class WebIOModule(ReaderWriter):
         return datetime.datetime.fromtimestamp(int(response))
 
 
+if __name__ == '__main__':
+    pass
 
 

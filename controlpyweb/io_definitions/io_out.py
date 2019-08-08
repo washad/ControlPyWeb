@@ -1,4 +1,4 @@
-from controlpyweb.io.single_io import SingleIO
+from controlpyweb.io_definitions.single_io import SingleIO
 from controlpyweb.abstract_reader_writer import AbstractReaderWriter
 
 

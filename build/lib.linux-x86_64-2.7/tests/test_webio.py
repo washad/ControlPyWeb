@@ -1,8 +1,8 @@
 from unittest import mock
 
 from controlpyweb.errors import ControlPyWebAddressNotFoundError, WebIOConnectionError
-from controlpyweb.io.discrete_io import DiscreteIn, DiscreteOut
-from controlpyweb.io.analog_io import AnalogOut
+from controlpyweb.io_definitions.discrete_io import DiscreteIn, DiscreteOut
+from controlpyweb.io_definitions.analog_io import AnalogOut
 from controlpyweb.webio_module import WebIOModule
 from assertpy import assert_that
 import unittest

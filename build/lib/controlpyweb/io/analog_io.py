@@ -12,6 +12,11 @@ class AnalogIn(SingleIO):
     def _convert_type(value):
         return float(value)
 
+    def __mod__(self, other):
+        if hasattr(other, 'value'):
+            other = other.value
+        return self.value % other
+
 
 class AnalogOut(IOOut, AnalogIn):
     def __init__(self, name: str, addr: str, default: float = 0.0,
@@ -21,3 +26,8 @@ class AnalogOut(IOOut, AnalogIn):
     @staticmethod
     def _convert_type(value):
         return float(value)
+
+    def __mod__(self, other):
+        if hasattr(other, 'value'):
+            other = other.value
+        return self.value % other
