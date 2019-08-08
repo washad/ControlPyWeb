@@ -9,7 +9,7 @@ class AbstractReaderWriter(ABC):
         pass
 
     @abstractmethod
-    def read_immediate(self, addr: str) -> object:
+    def read_immediate(self, addr: str, timeout: float = None) -> object:
         """This method must provide an immediate response to a read request"""
         pass
 

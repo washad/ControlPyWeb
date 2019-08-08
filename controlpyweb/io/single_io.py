@@ -3,8 +3,6 @@ import threading
 from controlpyweb.errors import ControlPyWebReadOnlyError
 from str2bool import str2bool
 
-lock = threading.Lock()
-
 
 class SingleIO:
     def __init__(self, name: str, addr: str, default: object, namespace: str = None,
@@ -25,6 +23,12 @@ class SingleIO:
         if hasattr(other, 'value'):
             other = other.value
         return self.value == other
+
+    def __float__(self):
+        return float(self.value)
+
+    def __int__(self):
+        return int(self.value)
 
     def __ne__(self, other):
         if hasattr(other, 'value'):
@@ -98,17 +102,15 @@ class SingleIO:
         return value
 
     def read(self):
-        with lock:
-            if self._reader_writer is None:
-                return None
-            val = self._reader_writer.read(self.addr)
-            val = self._convert_type(val)
-            return val
+        if self._reader_writer is None:
+            return None
+        val = self._reader_writer.read(self.addr)
+        val = self._convert_type(val)
+        return val
 
     def read_immediate(self):
-        with lock:
-            val = self._reader_writer.read_immediate(self.addr)
-            return val
+        val = self._reader_writer.read_immediate(self.addr)
+        return val
 
 
 

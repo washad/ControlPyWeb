@@ -7,6 +7,7 @@ from controlpyweb.webio_module import WebIOModule
 from assertpy import assert_that
 import unittest
 import json
+import time
 
 incoming = '''
     {
@@ -49,7 +50,7 @@ class Module(WebIOModule):
 
 
 module = Module("testme")
-
+module.update_reads_on_write = True
 
 def mocked_requests_get(*args, **kwargs):
     class MockResponse:
@@ -60,10 +61,11 @@ def mocked_requests_get(*args, **kwargs):
     return MockResponse()
 
 
-class TestWebIO(unittest.TestCase):
+class TestReadWrite(unittest.TestCase):
 
     def setUp(self):
         module.loads(incoming)
+        module.update_reads_on_write = True
         self.incoming = json.loads(incoming)    # type: dict
 
     def test_can_read_common_properties(self):
@@ -93,13 +95,13 @@ class TestWebIO(unittest.TestCase):
         global incoming
         incoming = incoming.replace(':"0"', ':"1"')
         module.Button1.addr = "device1DigitalInput1"
-        module.update_from_module()
+        module.update_from_hardware()
         assert_that(module.Button1).is_true()
         assert_that(module.Button2).is_true()
         assert_that(module.Button3).is_true()
 
         incoming = incoming.replace(':"1"', ':"0"')
-        module.update_from_module()
+        module.update_from_hardware()
         assert_that(module.Button1).is_false()
         assert_that(module.Button2).is_false()
         assert_that(module.Button3).is_false()
@@ -122,20 +124,6 @@ class TestWebIO(unittest.TestCase):
         module.Lamp1 = module.Lamp1
         changes = module.dumps(changes_only=True)
         assert_that(changes).is_empty()
-
-    def test_and_operator(self):
-        module.Lamp1 = True
-        module.Lamp2 = True
-        assert_that(module.Lamp1 and module.Lamp2).is_true()
-
-        module.Lamp2 = False
-        assert_that(module.Lamp1 and module.Lamp2).is_false()
-
-        assert_that(module.Lamp1 and True).is_true()
-        assert_that(module.Lamp1 and False).is_false()
-
-        assert_that(True and module.Lamp1).is_true()
-        assert_that(False and module.Lamp1).is_false()
 
     def test_setting_one_equal_to_another(self):
         module.Lamp1 = True
@@ -164,7 +152,6 @@ class TestWebIO(unittest.TestCase):
         j = module.dumps()
         print(j)
 
-
     def test_that_non_matching_address_gives_error(self):
         try:
             module.demand_address_exists = True
@@ -180,3 +167,22 @@ class TestWebIO(unittest.TestCase):
         module.demand_address_exists = False
         module.loads(incoming)
         print(module.Button1.read())
+
+    def test_turn_off_writes_update_reads(self):
+        module.Temp1 = 33
+        assert_that(module.Temp1).is_equal_to(33)
+
+        module.update_reads_on_write = False
+        module.Temp1 = 34
+        assert_that(module.Temp1).is_equal_to(33)
+
+    @mock.patch('requests.get', side_effect=mocked_requests_get)
+    def test_read_hardware_update_time(self, mock_get):
+        t = module.last_hardware_read_time
+        assert_that(t).is_none()
+        module.update_from_hardware()
+        t = module.last_hardware_read_time
+        diff = 1000 * (time.time() - t)
+        assert_that(diff).is_between(0, 0.1)
+        print(diff)
+

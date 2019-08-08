@@ -8,7 +8,7 @@ class IOOut(SingleIO):
         self.ignore_duplicate_writes = kwargs.get('ignore_duplicate_writes', True) if kwargs is not None else True
 
     def __set__(self, instance, value):
-        if isinstance(value, SingleIO):
+        if hasattr(value, 'value'):
             value = value.value
         self.write(value)
 

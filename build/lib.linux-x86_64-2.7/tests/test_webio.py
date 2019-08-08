@@ -93,13 +93,13 @@ class TestWebIO(unittest.TestCase):
         global incoming
         incoming = incoming.replace(':"0"', ':"1"')
         module.Button1.addr = "device1DigitalInput1"
-        module.update_from_module()
+        module.update_from_hardware()
         assert_that(module.Button1).is_true()
         assert_that(module.Button2).is_true()
         assert_that(module.Button3).is_true()
 
         incoming = incoming.replace(':"1"', ':"0"')
-        module.update_from_module()
+        module.update_from_hardware()
         assert_that(module.Button1).is_false()
         assert_that(module.Button2).is_false()
         assert_that(module.Button3).is_false()

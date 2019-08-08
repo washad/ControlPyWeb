@@ -2,13 +2,17 @@ from controlpyweb.abstract_reader_writer import AbstractReaderWriter
 import requests
 import json
 from typing import Union, Optional
+import time
+import threading
 
 from controlpyweb.errors import ControlPyWebAddressNotFoundError, WebIOConnectionError
 
+lock = threading.Lock()
 
 class ReaderWriter(AbstractReaderWriter):
 
-    def __init__(self, url: str, demand_address_exists: bool = True, timeout: float=10.0):
+    def __init__(self, url: str, demand_address_exists: bool = True, timeout: float = 10.0,
+                 **kwargs):
         """
         :param url: The address of the IO Base module from/to which IO is written
         """
@@ -16,10 +20,17 @@ class ReaderWriter(AbstractReaderWriter):
         url = f'{url}/customState.json'
         self._url = url    # type: str
         self._io = dict()
+        self._previous_read_io = dict()
         self._changes = dict()
         self._first_read = False
+        self._last_hardware_read_time = None            # type: time.time
+        self.update_reads_on_write = bool(kwargs.get('update_reads_on_write', False))
         self.demand_address_exists = demand_address_exists
         self.timeout = timeout
+
+    @property
+    def last_hardware_read_time(self):
+        return self._last_hardware_read_time
 
     def _check_for_address(self, addr: str):
         if not self.demand_address_exists:
@@ -31,8 +42,8 @@ class ReaderWriter(AbstractReaderWriter):
         if addr not in self._io:
             raise ControlPyWebAddressNotFoundError(addr)
 
-    def _get(self, timeout: float = None) -> str:
-        """ Does an http get and returns the json string results"""
+    def _get(self, timeout: float = None) -> dict:
+        """ Does an http get and returns the results as key/value pairs"""
         timeout = self.timeout if timeout is None else timeout
         self._first_read = True
         r = requests.get(self._url, timeout=timeout)
@@ -52,30 +63,34 @@ class ReaderWriter(AbstractReaderWriter):
 
     def dumps(self, changes_only: bool = False):
         """Returns the current IO key/values as json string"""
-        if changes_only:
-            if len(self._changes) == 0:
-                return ''
-            return json.dumps(self._changes)
-        return json.dumps(self._io)
+        with lock:
+            if changes_only:
+                if len(self._changes) == 0:
+                    return ''
+                return json.dumps(self._changes)
+            return json.dumps(self._io)
 
     def flush_changes(self):
         """ Erases the collection of changes stored in memory"""
-        self._changes = dict()
+        with lock:
+            self._changes = dict()
 
     def loads(self, json_str: str):
         """Replaces the current IO key/values with that from the json string"""
-        self._first_read = True
-        self._io = json.loads(json_str)
+        with lock:
+            self._first_read = True
+            self._io = json.loads(json_str)
 
     def read(self, addr: str) -> Optional[Union[bool, int, float, str]]:
         """Returns the value of a single IO from the memory store"""
-        if not self._first_read:
-            return None
-        self._check_for_address(addr)
-        val = self._io.get(addr)
-        return val
+        with lock:
+            if not self._first_read:
+                return None
+            self._check_for_address(addr)
+            val = self._io.get(addr)
+            return val
 
-    def read_immediate(self, addr: str, timeout: None) -> object:
+    def read_immediate(self, addr: str, timeout: float = None) -> object:
         """Makes a hardware call to the base module to retrieve the value of the IO. This is inefficient and should
         be used sparingly."""
         try:
@@ -88,26 +103,29 @@ class ReaderWriter(AbstractReaderWriter):
         except (requests.exceptions.ConnectionError, requests.exceptions.ConnectTimeout) as ex:
             raise WebIOConnectionError(ex)
 
-    def send_changes_to_module(self, timeout: float=None):
+    def send_changes_to_hardware(self, timeout: float = None):
         """ Takes the collection of changes made using the write command and
         sends them all to the hardware collectively. """
-        try:
-            if self._changes is None or len(self._changes) == 0:
-                return
-            timeout = self.timeout if timeout is None else timeout
-            requests.get(self._url, params=self._changes, timeout=timeout)
-            self.flush_changes()
-        except (requests.exceptions.ConnectionError, requests.exceptions.ConnectTimeout) as ex:
-            raise WebIOConnectionError(ex)
+        with lock:
+            try:
+                if self._changes is None or len(self._changes) == 0:
+                    return
+                timeout = self.timeout if timeout is None else timeout
+                requests.get(self._url, params=self._changes, timeout=timeout)
+                self.flush_changes()
+            except (requests.exceptions.ConnectionError, requests.exceptions.ConnectTimeout) as ex:
+                raise WebIOConnectionError(ex)
 
-    def update_from_module(self, timeout: float = None):
+    def update_from_hardware(self, timeout: float = None):
         """Makes a hardware call to the base module to retrieve the value of all IOs, storing their
         results in memory."""
         try:
             timeout = self.timeout if timeout is None else timeout
-            vals = self._get(timeout)
-            if vals is not None:
-                self._io = vals
+            with lock:
+                vals = self._get(timeout)
+                self._last_hardware_read_time = time.time()
+                if vals is not None:
+                    self._io = vals
             self.flush_changes()
         except (requests.exceptions.ConnectionError, requests.exceptions.ConnectTimeout) as ex:
             raise WebIOConnectionError(ex)
@@ -116,9 +134,11 @@ class ReaderWriter(AbstractReaderWriter):
         """
         Stores the write value in memory to be written as part of a group write when changes are sent to
         hardware."""
-        to_str = self._value_to_str(value)
-        self._io[addr] = value
-        self._changes[addr] = to_str
+        with lock:
+            to_str = self._value_to_str(value)
+            if self.update_reads_on_write:
+                self._io[addr] = value
+            self._changes[addr] = to_str
 
     def write_immediate(self, addr: str, value: object, timeout: float = None):
         """
@@ -127,8 +147,10 @@ class ReaderWriter(AbstractReaderWriter):
         try:
             timeout = self.timeout if timeout is None else timeout
             to_str = self._value_to_str(value)
-            self._io[addr] = value
-            requests.get(self._url, params={addr: to_str}, timeout=timeout)
+            with lock:
+                requests.get(self._url, params={addr: to_str}, timeout=timeout)
+                if self.update_reads_on_write:
+                    self._io[addr] = value
         except (requests.exceptions.ConnectionError, requests.exceptions.ConnectTimeout) as ex:
             raise WebIOConnectionError(ex)
 
