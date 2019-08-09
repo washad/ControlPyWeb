@@ -112,15 +112,15 @@ class ReaderWriter(AbstractReaderWriter):
     def send_changes_to_hardware(self, timeout: float = None):
         """ Takes the collection of changes made using the write command and
         sends them all to the hardware collectively. """
-        with lock:
-            try:
+        try:
+            with lock:
                 if self._changes is None or len(self._changes) == 0:
                     return
                 timeout = self.timeout if timeout is None else timeout
                 self._req.get(self._url, params=self._changes, timeout=timeout)
-                self.flush_changes()
-            except (requests.exceptions.ConnectionError, requests.exceptions.ConnectTimeout) as ex:
-                raise WebIOConnectionError(ex)
+            self.flush_changes()
+        except (requests.exceptions.ConnectionError, requests.exceptions.ConnectTimeout) as ex:
+            raise WebIOConnectionError(ex)
 
     def update_from_hardware(self, timeout: float = None):
         """Makes a hardware call to the base module to retrieve the value of all IOs, storing their
@@ -168,6 +168,9 @@ if __name__ == '__main__':
     for i in range(100):
         start = time.time()
         reader.update_from_hardware()
+        val = bool(reader.read('redLamp'))
+        reader.write('redLamp', not val)
+        reader.send_changes_to_hardware()
         duration = round(1000 * (time.time() - start), 1)
         times.append(duration)
     print(times)

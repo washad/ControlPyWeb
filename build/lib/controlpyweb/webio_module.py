@@ -47,5 +47,7 @@ class WebIOModule(ReaderWriter):
         return datetime.datetime.fromtimestamp(int(response))
 
 
+if __name__ == '__main__':
+    pass
 
 

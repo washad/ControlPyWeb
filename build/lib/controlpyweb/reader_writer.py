@@ -5,6 +5,7 @@ from typing import Union, Optional
 import time
 import threading
 
+
 from controlpyweb.errors import ControlPyWebAddressNotFoundError, WebIOConnectionError
 
 lock = threading.Lock()
@@ -12,7 +13,7 @@ lock = threading.Lock()
 class ReaderWriter(AbstractReaderWriter):
 
     def __init__(self, url: str, demand_address_exists: bool = True, timeout: float = 10.0,
-                 **kwargs):
+                 keep_alive: bool = True, **kwargs):
         """
         :param url: The address of the IO Base module from/to which IO is written
         """
@@ -24,6 +25,7 @@ class ReaderWriter(AbstractReaderWriter):
         self._changes = dict()
         self._first_read = False
         self._last_hardware_read_time = None            # type: time.time
+        self._req = requests if not keep_alive else requests.Session()
         self.update_reads_on_write = bool(kwargs.get('update_reads_on_write', False))
         self.demand_address_exists = demand_address_exists
         self.timeout = timeout
@@ -46,7 +48,7 @@ class ReaderWriter(AbstractReaderWriter):
         """ Does an http get and returns the results as key/value pairs"""
         timeout = self.timeout if timeout is None else timeout
         self._first_read = True
-        r = requests.get(self._url, timeout=timeout)
+        r = self._req.get(self._url, timeout=timeout)
         r = None if r is None else r.json()
         return r
 
@@ -82,7 +84,9 @@ class ReaderWriter(AbstractReaderWriter):
             self._io = json.loads(json_str)
 
     def read(self, addr: str) -> Optional[Union[bool, int, float, str]]:
-        """Returns the value of a single IO from the memory store"""
+        """
+        Returns the value of a single IO from the memory store
+        """
         with lock:
             if not self._first_read:
                 return None
@@ -91,8 +95,10 @@ class ReaderWriter(AbstractReaderWriter):
             return val
 
     def read_immediate(self, addr: str, timeout: float = None) -> object:
-        """Makes a hardware call to the base module to retrieve the value of the IO. This is inefficient and should
-        be used sparingly."""
+        """
+        Makes a hardware call to the base module to retrieve the value of the IO. This is inefficient and should
+        be used sparingly.
+        """
         try:
             self._check_for_address(addr)
             timeout = self.timeout if timeout is None else timeout
@@ -106,15 +112,15 @@ class ReaderWriter(AbstractReaderWriter):
     def send_changes_to_hardware(self, timeout: float = None):
         """ Takes the collection of changes made using the write command and
         sends them all to the hardware collectively. """
-        with lock:
-            try:
+        try:
+            with lock:
                 if self._changes is None or len(self._changes) == 0:
                     return
                 timeout = self.timeout if timeout is None else timeout
-                requests.get(self._url, params=self._changes, timeout=timeout)
-                self.flush_changes()
-            except (requests.exceptions.ConnectionError, requests.exceptions.ConnectTimeout) as ex:
-                raise WebIOConnectionError(ex)
+                self._req.get(self._url, params=self._changes, timeout=timeout)
+            self.flush_changes()
+        except (requests.exceptions.ConnectionError, requests.exceptions.ConnectTimeout) as ex:
+            raise WebIOConnectionError(ex)
 
     def update_from_hardware(self, timeout: float = None):
         """Makes a hardware call to the base module to retrieve the value of all IOs, storing their
@@ -148,9 +154,24 @@ class ReaderWriter(AbstractReaderWriter):
             timeout = self.timeout if timeout is None else timeout
             to_str = self._value_to_str(value)
             with lock:
-                requests.get(self._url, params={addr: to_str}, timeout=timeout)
+                self._req.get(self._url, params={addr: to_str}, timeout=timeout)
                 if self.update_reads_on_write:
                     self._io[addr] = value
         except (requests.exceptions.ConnectionError, requests.exceptions.ConnectTimeout) as ex:
             raise WebIOConnectionError(ex)
 
+
+if __name__ == '__main__':
+    import statistics
+    reader = ReaderWriter(url="192.168.100.120", keep_alive=True)
+    times = []
+    for i in range(100):
+        start = time.time()
+        reader.update_from_hardware()
+        val = bool(reader.read('redLamp'))
+        reader.write('redLamp', not val)
+        reader.send_changes_to_hardware()
+        duration = round(1000 * (time.time() - start), 1)
+        times.append(duration)
+    print(times)
+    print(max(times), min(times), statistics.mean(times))
