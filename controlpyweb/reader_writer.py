@@ -152,7 +152,15 @@ class ReaderWriter(AbstractReaderWriter):
         Instead of waiting for a group write, writes the given value immediately. Note, this is not very efficient
         and should be used sparingly. """
 
-        items = {addr: str(val) for addr, val in zip(addr, value)}
+        if isinstance(addr, list):
+            if isinstance(value, list):
+                items = {addr: self._value_to_str(val) for addr, val in zip(addr, value)}
+            else:
+                value = self._value_to_str(value)
+                items = {addr: value for addr in addr}
+        else:
+            items = {addr: value}
+
         try:
             timeout = self.timeout if timeout is None else timeout
             with lock:

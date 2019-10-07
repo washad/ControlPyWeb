@@ -125,6 +125,10 @@ class TestReadWrite(unittest.TestCase):
         changes = module.dumps(changes_only=True)
         assert_that(changes).is_empty()
 
+    @mock.patch('requests.get', side_effect=mocked_requests_get)
+    def test_can_write_immediate(self, mock_get):
+        module.write_immediate(module.Lamp1.addr, True)
+
     def test_setting_one_equal_to_another(self):
         module.Lamp1 = True
         module.Lamp2 = False
