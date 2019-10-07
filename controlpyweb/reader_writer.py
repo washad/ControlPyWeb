@@ -1,7 +1,7 @@
 from controlpyweb.abstract_reader_writer import AbstractReaderWriter
 import requests
 import json
-from typing import Union, Optional
+from typing import Union, Optional, List
 import time
 import threading
 
@@ -146,16 +146,18 @@ class ReaderWriter(AbstractReaderWriter):
                 self._io[addr] = value
             self._changes[addr] = to_str
 
-    def write_immediate(self, addr: str, value: object, timeout: float = None):
+    def write_immediate(self, addr: Union[str, List[str]],
+                        value: Union[object, List[object]], timeout: float = None):
         """
         Instead of waiting for a group write, writes the given value immediately. Note, this is not very efficient
         and should be used sparingly. """
+
+        items = {addr: str(val) for addr, val in zip(addr, value)}
         try:
             timeout = self.timeout if timeout is None else timeout
-            to_str = self._value_to_str(value)
             with lock:
-                self._req.get(self._url, params={addr: to_str}, timeout=timeout)
-                if self.update_reads_on_write:
+                self._req.get(self._url, params=items, timeout=timeout)
+                for addr, value in items.items():
                     self._io[addr] = value
         except (requests.exceptions.ConnectionError, requests.exceptions.ConnectTimeout) as ex:
             raise WebIOConnectionError(ex)
