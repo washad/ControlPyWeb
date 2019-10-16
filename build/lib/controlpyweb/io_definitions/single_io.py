@@ -63,7 +63,7 @@ class SingleIO:
         raise ControlPyWebReadOnlyError
 
     def __str__(self):
-        return f'[{type(self).__name__}] {self.name} = {self.value}'
+        return '[{}] {} = {}'.format(type(self).__name__, self.name, self.value)
 
     def __add__(self, other):
         if hasattr(other, 'value'):
@@ -111,6 +111,8 @@ class SingleIO:
     def read_immediate(self):
         val = self._reader_writer.read_immediate(self.addr)
         return val
+
+
 
 
 

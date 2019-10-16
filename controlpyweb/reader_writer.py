@@ -17,8 +17,8 @@ class ReaderWriter(AbstractReaderWriter):
         """
         :param url: The address of the IO Base module from/to which IO is written
         """
-        url = f'http://{url}' if 'http' not in url else url
-        url = f'{url}/customState.json'
+        url = 'http://{}'.format(url) if 'http' not in url else url
+        url = '{}/customState.json'.format(url)
         self._url = url    # type: str
         self._io = dict()
         self._previous_read_io = dict()
@@ -159,7 +159,7 @@ class ReaderWriter(AbstractReaderWriter):
                 value = self._value_to_str(value)
                 items = {addr: value for addr in addr}
         else:
-            items = {addr: value}
+            items = {addr: self._value_to_str(value)}
 
         try:
             timeout = self.timeout if timeout is None else timeout

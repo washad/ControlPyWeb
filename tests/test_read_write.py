@@ -1,4 +1,7 @@
 from unittest import mock
+import sys
+
+sys.modules['requests'] = mock.MagicMock()
 
 from controlpyweb.errors import ControlPyWebAddressNotFoundError, WebIOConnectionError
 from controlpyweb.io_definitions.discrete_io import DiscreteIn, DiscreteOut
@@ -43,6 +46,7 @@ class Module(WebIOModule):
     Button1 = DiscreteIn("Button1", "device1DigitalInput1", units="On/Off")
     Button2 = DiscreteIn("Button2", "device1DigitalInput2", units="Start/Stop")
     Button3 = DiscreteIn("Button3", "device1DigitalInput3")
+    Button3 = DiscreteIn(addr="device1DigitalInput4")
     Lamp1 = DiscreteOut("Lamp1", "redLamp")
     Lamp2 = DiscreteOut("Lamp2", "amberLamp")
     Temp1 = AnalogOut("Temp1", "temperature1", units="DegF")
@@ -51,6 +55,7 @@ class Module(WebIOModule):
 
 module = Module("testme")
 module.update_reads_on_write = True
+module._req = mock.MagicMock()
 
 def mocked_requests_get(*args, **kwargs):
     class MockResponse:
@@ -90,8 +95,8 @@ class TestReadWrite(unittest.TestCase):
         assert_that(keys).contains('redLamp')
         assert_that(keys).contains('amberLamp')
 
-    @mock.patch('requests.get', side_effect=mocked_requests_get)
-    def test_that_can_read_values_from_hardware(self, mock_get):
+    def test_that_can_read_values_from_hardware(self):
+        module._req.get = mock.MagicMock(side_effect=mocked_requests_get)
         global incoming
         incoming = incoming.replace(':"0"', ':"1"')
         module.Button1.addr = "device1DigitalInput1"
