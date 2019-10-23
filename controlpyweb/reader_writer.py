@@ -1,3 +1,9 @@
+"""
+Module Reader Writer
+This module provide the ReaderWriter class as a concrete implemenation of the AbstractReaderWriter. It handles
+the implementation details of interfacing with the hardware.
+"""
+
 from controlpyweb.abstract_reader_writer import AbstractReaderWriter
 import requests
 import json
@@ -109,6 +115,10 @@ class ReaderWriter(AbstractReaderWriter):
         except (requests.exceptions.ConnectionError, requests.exceptions.ConnectTimeout) as ex:
             raise WebIOConnectionError(ex)
 
+    def to_hardware(self, timeout: float = None):
+        """ Same as send_changes_to_hardware"""
+        return self.send_changes_to_hardware(timeout)
+
     def send_changes_to_hardware(self, timeout: float = None):
         """ Takes the collection of changes made using the write command and
         sends them all to the hardware collectively. """
@@ -121,6 +131,10 @@ class ReaderWriter(AbstractReaderWriter):
             self.flush_changes()
         except (requests.exceptions.ConnectionError, requests.exceptions.ConnectTimeout) as ex:
             raise WebIOConnectionError(ex)
+
+    def from_hardware(self, timeout: float = None):
+        """ Same as update_from_hardware"""
+        self.update_from_hardware(timeout)
 
     def update_from_hardware(self, timeout: float = None):
         """Makes a hardware call to the base module to retrieve the value of all IOs, storing their
@@ -171,17 +185,3 @@ class ReaderWriter(AbstractReaderWriter):
             raise WebIOConnectionError(ex)
 
 
-if __name__ == '__main__':
-    import statistics
-    reader = ReaderWriter(url="192.168.100.120", keep_alive=True)
-    times = []
-    for i in range(100):
-        start = time.time()
-        reader.update_from_hardware()
-        val = bool(reader.read('redLamp'))
-        reader.write('redLamp', not val)
-        reader.send_changes_to_hardware()
-        duration = round(1000 * (time.time() - start), 1)
-        times.append(duration)
-    print(times)
-    print(max(times), min(times), statistics.mean(times))

@@ -1,3 +1,7 @@
+"""
+Module: Errors
+Purpose: The purpose of this module is to define the errors that will be thrown by the application.
+"""
 
 
 class ControlPyWebReadOnlyError(Exception):

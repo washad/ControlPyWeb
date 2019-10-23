@@ -42,11 +42,11 @@ incoming = '''
 
 
 class Module(WebIOModule):
-    member_len = 7
+    member_len = 8
     Button1 = DiscreteIn("Button1", "device1DigitalInput1", units="On/Off")
     Button2 = DiscreteIn("Button2", "device1DigitalInput2", units="Start/Stop")
     Button3 = DiscreteIn("Button3", "device1DigitalInput3")
-    Button3 = DiscreteIn(addr="device1DigitalInput4")
+    Button4 = DiscreteIn("Button4", "device1DigitalInput4")
     Lamp1 = DiscreteOut("Lamp1", "redLamp")
     Lamp2 = DiscreteOut("Lamp2", "amberLamp")
     Temp1 = AnalogOut("Temp1", "temperature1", units="DegF")

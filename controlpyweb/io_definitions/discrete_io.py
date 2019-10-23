@@ -1,3 +1,9 @@
+"""
+Discrete IO
+The classes within this module, DiscreteIn and Discrete represent digital inputs and relay outputs at the hardware. They
+provide specific implementation details for dealing with each.
+"""
+
 from controlpyweb.io_definitions.single_io import SingleIO
 from controlpyweb.io_definitions.io_out import IOOut
 from controlpyweb.abstract_reader_writer import AbstractReaderWriter

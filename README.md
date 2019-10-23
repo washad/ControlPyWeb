@@ -46,5 +46,19 @@ relay_out.MaintLight = not digital_in.DoorClosed
 relay_out.send_changes_to_module()
 ~~~~
 
-Though it is possible to do immediate reads/writes, the most efficient pattern is to first to 
-do an update from the module, make all changes, then send the results.
+##### Immediate reads/writes are supported
+
+~~~~
+relay_out.StartLamp.write_immediate(True)  
+is_started = digital_in.read_immediate()
+~~~~
+
+(However, immediate reads/writes are costly from a resource perspective and should be avoided.)
+
+
+##### Overrides are common for typical operations
+
+~~~~
+if discrete_in.StartButton and discrete_in.DoorClosed:
+    discrete_out.StartMachine = True
+~~~~

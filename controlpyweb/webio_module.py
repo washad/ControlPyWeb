@@ -1,11 +1,18 @@
+"""
+Module Web IO:
+This class provides a base container for IO. Generally, the user will inherit from this module and place their
+individual IO within. See test cases for examples of use.
+"""
+
 from controlpyweb.errors import ControlPyWebAddressNotFoundError
 from controlpyweb.reader_writer import ReaderWriter
+from abc import ABC
 import datetime
 
 from controlpyweb.io_definitions.single_io import SingleIO
 
 
-class WebIOModule(ReaderWriter):
+class WebIOModule(ReaderWriter, ABC):
 
     def __init__(self, url: str, demand_address_exists: bool = True):
         super().__init__(url, demand_address_exists)
@@ -26,7 +33,6 @@ class WebIOModule(ReaderWriter):
             return self.read(addr)
         except ControlPyWebAddressNotFoundError:
             return None
-
 
     @property
     def serial_number(self) -> str:
